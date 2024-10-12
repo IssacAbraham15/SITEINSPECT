@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "TESTUBERAPP",
-    "slug": "TESTUBERAPP",
+    "name": "Inspection_App",
+    "slug": "Inspection_App",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,12 +10,13 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#2f80ed"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.csit321.siteinspect",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -23,11 +24,16 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      [
+        "expo-router",
+        {
+          "origin": "https://siteInspect.com/"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
