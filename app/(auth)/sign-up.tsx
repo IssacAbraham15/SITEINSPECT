@@ -6,8 +6,6 @@ import { icons, images } from "@/constants";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {Alert, Image,ScrollView, Text, View,} from "react-native"
-import ReactNativeModal from "react-native-modal";
-import { SafeAreaView } from "react-native-safe-area-context"
 import {createUser} from '../../lib/appwrite'
 
 
