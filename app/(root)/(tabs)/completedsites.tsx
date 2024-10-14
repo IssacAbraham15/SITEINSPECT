@@ -1,17 +1,25 @@
 import React from 'react';
-import { Link } from "expo-router";
+
+import { SignedIn } from "@clerk/clerk-expo";
+import { Link, router } from "expo-router";
 import { Text, View, Image, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from '@expo/vector-icons'; // For icons in the bottom navigation
 
 
-const DashboardScreen=() => {
+
+export default function CompletedSites() {
+
+    const goToOnGoingSites = () => {
+        router.push("/(root)/(tabs)/ongoingsites")
+  };
+
     return (
         <SafeAreaView>
         <ScrollView className="">
             {/* Header Section */}
             <View className="flex-row items-center px-4 py-4 bg-white">
-                <Image source={require('@/assets/icons/profile-icon.png')} className=" w-16 h-16 rounded-full bg-gray-100" />
+                <Image source={require('@/assets/icons/profile-icon.png')} className="w-16 h-16 rounded-full bg-gray-100" />
                 <Text className="text-2xl font-bold ml-4">username</Text>
             </View>
 
@@ -27,14 +35,14 @@ const DashboardScreen=() => {
 
             {/* Tabs for Site Progress */}
             <View className="flex-row justify-evenly mt-6">
-                <TouchableOpacity className="px-4 py-2 rounded-lg bg-[#b52424]">
-                    <Text className="text-white font-bold">On going sites</Text>
-                </TouchableOpacity>
-                <Link href='/(tabs)/chat' asChild>
+                
+                    <TouchableOpacity className="px-4 py-2 rounded-lg bg-[#DCDCDC]" onPressOut={goToOnGoingSites} >
+                        <Text className="text-primary-101 font-medium">On going sites</Text>
+                    </TouchableOpacity>
+                
                     <TouchableOpacity className="px-4 py-2 rounded-lg bg-[#b52424]">
                         <Text className="text-white font-bold">Completed Sites</Text>
                     </TouchableOpacity>
-                </Link>
             </View>
 
             {/* Project List */}
@@ -54,16 +62,10 @@ const DashboardScreen=() => {
             </View>
         </ScrollView>
     </SafeAreaView>
-    )
+    );
 }
 
 const projects = [
-    { name: 'Astom House', location: 'Dubai South', progress: 25, image: require('@/assets/images/astrom-house.png') },
-    { name: 'Jailum Apartment', location: 'Jumeirah Beach Residence', progress: 50, image: require('@/assets/images/jailubai-apartment.png') },
-    { name: 'Marina View', location: 'Marina', progress: 25, image: require('@/assets/images/mina-view.png') },
-    { name: 'Astom Villa', location: 'Damac Lagoons', progress: 75, image: require('@/assets/images/astrom-villa.png') },
-    { name: 'no.1', location: 'Damac Lagoons', progress: 75, image: require('@/assets/images/astrom-villa.png') },
-    { name: 'no.2', location: 'Damac Lagoons', progress: 75, image: require('@/assets/images/astrom-villa.png') },
+    { name: 'GardenView', location: 'Mudon', progress: 100, image: require('@/assets/images/GardenView.png') },
+   
 ];
-
-export default DashboardScreen;

@@ -33,7 +33,7 @@ const SignIn =() =>{
           console.log(result)
           setIsLoggedIn(true)
           console.log("message after logging in",isLoggedIn)
-          router.replace("/(root)/(tabs)/home")
+          router.replace("/(root)/(tabs)/ongoingsites")
         } catch (err : any) {
           Alert.alert('Error',err.message)
         } finally {
