@@ -12,7 +12,7 @@ const onGoingSites=() => {
     };
 
     const goToConstructDb = () => {
-        router.push('/(root)/constructdb')
+        router.push("/(other)/constructdb")
     }
 
   
@@ -49,13 +49,13 @@ const onGoingSites=() => {
             {/* Project List */}
             <View className="mt-8 px-4">
                 {projects.map((project, index) => (
-                    
+                    <TouchableOpacity onPress={goToConstructDb}>
                         <View key={index} className="flex-row items-center bg-white p-4 mb-4 rounded-lg shadow-sm">
                             <Image source={project.image} className="w-20 h-20 rounded-lg" />
                             
                             <View className="ml-4 flex-1">
                                 
-                                <Text className="text-lg font-bold" onPress={goToConstructDb}>{project.name}</Text>
+                                <Text className="text-lg font-bold">{project.name}</Text>
                            
                                 <Text className="text-gray-500">{project.location}</Text>
                             </View>
@@ -64,7 +64,7 @@ const onGoingSites=() => {
                                 <Text className="text-lg font-bold text-primary-101">{project.progress}%</Text>
                             </View>
                         </View>
-                    
+                    </TouchableOpacity>
                 ))}
             </View>
         </ScrollView>
