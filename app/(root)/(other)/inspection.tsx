@@ -10,6 +10,10 @@ const Inspection = () => {
         router.back()
     }
 
+    const goToCamera=()=>{
+        router.push('/(root)/(other)/camera')
+    }
+
   return (
     <SafeAreaView className='flex p-6 bg-gray-50'>
     <ScrollView className="">
@@ -112,7 +116,7 @@ const Inspection = () => {
 
         {/* Action Buttons Section */}
         <View className="mt-6 flex-row justify-between px-2">
-            <TouchableOpacity className="flex-1 bg-white border border-[#800000] p-4 rounded-lg mr-2 items-center">
+            <TouchableOpacity onPress={goToCamera} className="flex-1 bg-white border border-[#800000] p-4 rounded-lg mr-2 items-center">
             <FontAwesome name="camera" size={24} color="#800000" />
             <Text className="text-[#800000] mt-2">Take Photo</Text>
             </TouchableOpacity>

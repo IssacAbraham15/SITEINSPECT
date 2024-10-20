@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 
 const index =() =>{
     Logout();
-    return <Redirect href="/(root)/(other)/review"/>
+    return <Redirect href="/(other)/review"/>
 
 
 }

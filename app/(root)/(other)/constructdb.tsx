@@ -20,6 +20,10 @@ const gotoInspect=()=>{
     router.push('/(other)/inspection')
 }
 
+const goToReview=()=>{
+    router.push('/(other)/review')
+}
+
 export default function constructdb() {
     return (
      
@@ -56,7 +60,7 @@ export default function constructdb() {
                     <Text className="flex-1 text-center text-xs font-bold">PROGRESS</Text>
                 </View>
               {datas.map((data, index) =>(
-                <TouchableOpacity onPress={gotoInspect}>
+                <TouchableOpacity onPress={goToReview}>
                 <View className={`flex-row justify-center p-4 items-center ${index % 2 === 0 ? 'bg-gray-200' : 'bg-white'} border-b border-gray-200`}>
                   <Text className="flex-1 right-3 text-center text-xs">{data.id}</Text>
                   <Text className="flex-1 right-3 text-center text-xs">{data.construct}</Text>

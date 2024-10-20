@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Navigation with Stylized Arrow</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #e0f7fa;
+        }
+        canvas {
+            border: 5px solid #00796b;
+            background-color: #ffffff; /* Solid white background */
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .distance {
+            font-size: 24px;
+            color: #004d40;
+            margin-top: 15px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="radar-container">
+        <canvas id="radar" width="300" height="300"></canvas>
+        <div class="distance" id="distance"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("radar");
+        const ctx = canvas.getContext("2d");
+        const distanceDisplay = document.getElementById("distance");
+
+        const destination = {
+            lat: 24.487681,  // Destination latitude
+            lng: 54.364913, // Destination longitude
+        };
+
+        let bounceOffset = 0;
+        let bounceDirection = 1;
+
+        function degreesToRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        function radiansToDegrees(radians) {
+            return radians * (180 / Math.PI);
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;  // Earth radius in meters
+            const lat1Rad = degreesToRadians(lat1);
+            const lat2Rad = degreesToRadians(lat2);
+            const diffLat = degreesToRadians(lat2 - lat1);
+            const diffLong = degreesToRadians(lon2 - lon1);
+
+            const a = Math.sin(diffLat / 2) * Math.sin(diffLat / 2) +
+                      Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+                      Math.sin(diffLong / 2) * Math.sin(diffLong / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c;
+        }
+
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            const lat1Rad = degreesToRadians(lat1);
+            const lat2Rad = degreesToRadians(lat2);
+            const diffLong = degreesToRadians(lon2 - lon1);
+
+            const y = Math.sin(diffLong) * Math.cos(lat2Rad);
+            const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - 
+                      Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(diffLong);
+            const bearing = Math.atan2(y, x);
+
+            return (radiansToDegrees(bearing) + 360) % 360;
+        }
+
+        function updateArrow(bearing) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the transparent green square
+            ctx.fillStyle = "rgba(102, 187, 106, 0.3)"; // Light green with transparency
+            ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas with transparent green
+
+            // Adjust bounceOffset for the bounce effect
+            if (bounceOffset > 10) bounceDirection = -1;
+            if (bounceOffset < -10) bounceDirection = 1;
+            bounceOffset += bounceDirection * 0.5;
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2 + bounceOffset);
+            ctx.rotate(degreesToRadians(bearing));
+
+            // Draw arrow with shadow
+            ctx.beginPath();
+            ctx.moveTo(0, -70); // Arrow tip
+            ctx.lineTo(25, 40); // Bottom right
+            ctx.lineTo(0, 20); // Middle point
+            ctx.lineTo(-25, 40); // Bottom left
+            ctx.closePath();
+            ctx.fillStyle = "#66bb6a"; // Lighter green
+            ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+            ctx.shadowBlur = 10;
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        navigator.geolocation.watchPosition(position => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            const distance = calculateDistance(latitude, longitude, destination.lat, destination.lng);
+            distanceDisplay.textContent = `${Math.round(distance)} meters to destination`;
+
+            const bearing = calculateBearing(latitude, longitude, destination.lat, destination.lng);
+
+            // Update arrow direction based on the current bearing
+            updateArrow(bearing);
+
+        }, err => {
+            console.error("Error getting position: ", err);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 1000,
+            timeout: 5000,
+        });
+
+        // Animate the arrow continuously
+        function animate() {
+            requestAnimationFrame(animate);
+            const bearing = 0; // Set an initial bearing value for testing animation (you'll replace it dynamically)
+            updateArrow(bearing); // Update the arrow within the animation loop
+        }
+
+        animate();
+    </script>
+</body>
+</html>

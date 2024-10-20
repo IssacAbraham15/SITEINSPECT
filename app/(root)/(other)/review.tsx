@@ -6,6 +6,9 @@ import CustomButton from '@/components/CustomButton';
 import { Link, router } from 'expo-router';
 
 export default function review(){
+    function goToRadar() {
+    router.push('/(other)/radar')
+  }
 
     const goToCompare=()=>{
         router.push("/(root)/(other)/comparephotos")
@@ -20,9 +23,9 @@ export default function review(){
     }
   return (
 
-        <SafeAreaView className="flex-1 p-6 bg-gray-50">
+        <SafeAreaView className="flex-1 p-6 bg-white">
         {/* Header Section with Date */}
-        <View className="flex-row items-center justify-between px-4 py-2 bg-white shadow-md">
+        <View className="flex-row items-center justify-between px-4 py-2 bg-white shadow-sm">
             <TouchableOpacity className='items-center justify-center' onPress={goBack}>
             <FontAwesome name="arrow-left" size={24} color="#800000" />
             </TouchableOpacity>
@@ -71,7 +74,7 @@ export default function review(){
             <View className="flex-row items-center">
             <Text className="bg-gray-200 px-4 py-2 rounded-full text-gray-700 mr-2">Foundation</Text>
             <Text className="bg-gray-200 px-4 py-2 rounded-full text-gray-700 mr-2">Pillar</Text>
-            <TouchableOpacity className="bg-[#800000] px-6 py-2 rounded-full items-center justify-center m-auto">
+            <TouchableOpacity onPress={goToRadar}className="bg-[#800000] px-6 py-2 rounded-full items-center justify-center m-auto">
                 <Text className="text-white font-medium">Locate</Text>
             </TouchableOpacity>
             </View>
