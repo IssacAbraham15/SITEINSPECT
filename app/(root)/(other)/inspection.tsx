@@ -14,6 +14,10 @@ const Inspection = () => {
         router.push('/(root)/(other)/camera')
     }
 
+    const goToMeasure=()=>{
+        router.push('/(root)/(other)/measure')
+    }
+
   return (
     <SafeAreaView className='flex p-6 bg-gray-50'>
     <ScrollView className="">
@@ -121,7 +125,7 @@ const Inspection = () => {
             <Text className="text-[#800000] mt-2">Take Photo</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1 bg-white border border-[#800000] p-4 rounded-lg ml-2 items-center">
+            <TouchableOpacity onPress={goToMeasure} className="flex-1 bg-white border border-[#800000] p-4 rounded-lg ml-2 items-center">
             <FontAwesome name='tag' size={24} color={'#800000'} > </FontAwesome>
             <Text className="text-[#800000] mt-2">Measure</Text>
             </TouchableOpacity>

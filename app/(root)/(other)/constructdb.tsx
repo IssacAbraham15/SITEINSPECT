@@ -31,7 +31,7 @@ export default function constructdb() {
             {/* Header Section */}
             <View className="flex items-center px-6 py bg-white">
                 <Image 
-                    source={require('@/assets/images/astrom-house.png')} 
+                    source={require('@/assets/icons/profile-icon.png')} 
                     className="w-16 h-16 rounded bg-gray-100" 
                     style={{ width: 400, height: 250 }} // Ensure dimensions are set
                 />

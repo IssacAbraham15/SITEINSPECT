@@ -10,6 +10,7 @@ const Layout=() => {
         <Stack.Screen name="inspection" options={{ headerShown: false }} />
         <Stack.Screen name="camera" options={{ headerShown: false }} />
         <Stack.Screen name="radar" options={{ headerShown: false }} />
+        <Stack.Screen name="measure" options={{ headerShown: false }} />
       </Stack>
 
   );

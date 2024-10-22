@@ -56,7 +56,7 @@ export default function camera(){
 
   const takePhoto = async () => { // This function was added for capturing the photo
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync(); // This line was added to take the picture
+      const photo:any = await cameraRef.current.takePictureAsync(); // This line was added to take the picture
       setPhotoUri(photo.uri); // This line was added to store the photo URI
       const asset = await MediaLibrary.createAssetAsync(photo.uri); // This line saves the photo to the gallery
       console.log('Bitch check you gallery', asset.uri);

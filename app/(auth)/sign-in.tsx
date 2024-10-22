@@ -7,8 +7,8 @@ import { getCurrentUser, signIn } from "@/lib/appwrite";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {Alert, Image,ScrollView, Text, View} from "react-native"
-import ReactNativeModal from "react-native-modal";
-import { SafeAreaView } from "react-native-safe-area-context"
+import AsyncStorage from '@react-native-async-storage/async-storage' // Importing AsyncStorage
+
 
 const SignIn =() =>{
   const [form, setForm] = useState({
@@ -17,8 +17,9 @@ const SignIn =() =>{
     });
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { setUser, setIsLoggedIn,isLoggedIn } = useGlobalContext();
+  const { setUser, setIsLoggedIn, isLoggedIn} = useGlobalContext();
   
+
   const onSignInPress = async () => {
         if (!form.email || !form.password ){
           Alert.alert('Error', 'Please fill in all fields')
@@ -30,9 +31,7 @@ const SignIn =() =>{
           await signIn(form.email, form.password)
           const result = await getCurrentUser();
           setUser(result)
-          console.log(result)
           setIsLoggedIn(true)
-          console.log("message after logging in",isLoggedIn)
           router.replace("/(root)/(tabs)/ongoingsites")
         } catch (err : any) {
           Alert.alert('Error',err.message)

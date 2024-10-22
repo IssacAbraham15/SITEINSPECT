@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser } from "@/lib/appwrite"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const GlobalContext = createContext();
@@ -11,29 +12,32 @@ const GlobalProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        getCurrentUser()
-            .then((res) => {
-
-                if (res) {
-
-                    setIsLoggedIn(true);
-
-                    setUser(res);
+        const checkUserSession = async () => {
+            try {
+                const savedUser = await AsyncStorage.getItem('user'); // this line was added to check if user data exists in AsyncStorage
+                if (savedUser) {
+                    setUser(JSON.parse(savedUser)); // this line was added to parse and set the saved user data
+                    setIsLoggedIn(true); // this line was added to set the login state to true if the user is found
                 } else {
-
-                    setIsLoggedIn(false);
-                    setUser(null);
+                    const currentUser = await getCurrentUser();
+                    if (currentUser) {
+                        await AsyncStorage.setItem('user', JSON.stringify(currentUser)); // this line was added to store user data in AsyncStorage
+                        setUser(currentUser);
+                        setIsLoggedIn(true);
+                    }
+                    else {
+                        setIsLoggedIn(false);
+                    }
                 }
-            })
-            .catch((error) => {
-                console.log(error);
-            })
-            .finally(() => {
+            } catch (error) {
+                console.log("Error checking user session: ", error);
+            } finally {
                 setIsLoading(false);
-            });
+            }
+        };
+
+        checkUserSession();
     }, []);
-
-
 
     return (
         <GlobalContext.Provider
@@ -51,5 +55,3 @@ const GlobalProvider = ({ children }) => {
 };
 
 export default GlobalProvider;
-
-//nice

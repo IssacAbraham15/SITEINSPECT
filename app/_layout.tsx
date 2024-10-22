@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import GlobalProvider from '@/context/GlobalProvider'
+import { ActivityIndicator, View } from 'react-native';
 
 
 
@@ -31,7 +32,11 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return null;
+    return(
+      <View className='flex-1 justify-center items-center'>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    )
   }
 
   return (

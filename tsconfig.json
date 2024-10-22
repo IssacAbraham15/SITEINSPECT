@@ -13,7 +13,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "lib/appwrite.js",
+    "lib/appwrite.ts",
     "context/GlobalProvider.js"
   ]
 }
