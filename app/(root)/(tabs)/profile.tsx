@@ -1,4 +1,3 @@
-
 import { Alert, Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,7 +9,7 @@ import { useGlobalContext } from "@/context/GlobalProvider";
 import { useEffect } from "react";
 
 const Profile = () => {
-  const { user, setUser, setIsLoggedIn,isLoggedIn } = useGlobalContext(); 
+  const { user, setUser, setIsLoggedIn, isLoggedIn } = useGlobalContext(); 
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -21,23 +20,22 @@ const Profile = () => {
     };
 
     fetchUserData();
-    }, []);
+  }, []);
 
-    const firstname = user.username.split(" ")[0]
-    const lastname = user.username.split(" ").pop()
-
- const onLogout = async () => {
-  try {
+  const onLogout = async () => {
+    try {
       await Logout(); // Await the logout function
       setUser(null); // Clear the user state
       setIsLoggedIn(false); // Set the login state to false
       router.replace("/(auth)/sign-in"); // Navigate to sign-in page
-
     } catch (err: any) {
-        Alert.alert('Error', err.message);
+      Alert.alert('Error', err.message);
     }
-        
-  }
+  };
+
+  const firstname = user ? user.username.split(" ")[0] : "First name"; // Fallback if user is null
+  const lastname = user ? user.username.split(" ").pop() : "Last name"; // Fallback if user is null
+  const email = user ? user.email : "Email"; // Fallback email
 
   return (
     <SafeAreaView className="flex-1">
@@ -48,12 +46,12 @@ const Profile = () => {
         <Text className="text-2xl font-JakartaBold my-5 text-primary-101">My profile</Text>
 
         <View className="flex items-center justify-center my-5">
-          {user.avatar ? (
+          {user && user.avatar ? (
             <Image
               source={{ uri: user.avatar }} // This should point to the avatar URL
               style={{ width: 100, height: 100, borderRadius: 50 }} // Customize size and shape
             />
-            ) : (
+          ) : (
             <Image
               source={require('@/assets/icons/profile-icon.png')} // Fallback avatar
               style={{ width: 50, height: 50, borderRadius: 50 }} // Customize size and shape
@@ -66,18 +64,17 @@ const Profile = () => {
             <InputField
               label="First name"
               placeholder={firstname}
-              placeholderTextColor='black'
+              placeholderTextColor="black"
               containerStyle="w-full"
               inputStyle="p-4"
               editable={false}
               underlineColorAndroid="transparent"
             />
-            
 
             <InputField
               label="Last name"
               placeholder={lastname}
-              placeholderTextColor='black'
+              placeholderTextColor="black"
               containerStyle="w-full"
               inputStyle="p-3.5"
               editable={false}
@@ -86,8 +83,8 @@ const Profile = () => {
 
             <InputField
               label="Email"
-              placeholder={user.email}
-              placeholderTextColor='black'
+              placeholder={email}
+              placeholderTextColor="black"
               containerStyle="w-full"
               inputStyle="p-3.5"
               editable={false}
@@ -104,8 +101,6 @@ const Profile = () => {
         </View>
         <CustomButton title="Logout" onPress={onLogout} className="mt-6 bg-primary-101" />
       </ScrollView>
-
-      
     </SafeAreaView>
   );
 };

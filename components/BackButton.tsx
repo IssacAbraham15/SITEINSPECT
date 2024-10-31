@@ -47,7 +47,7 @@ const BackButton = ({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`bg-blue-500 w-16 h-16 rounded-full justify-center items-center ${getBgVariantStyle(bgVariant)} ${className}`}
+      className={`bg-primary-101 w-16 h-16 rounded-full justify-center items-center ${getBgVariantStyle(bgVariant)} ${className}`}
       
       {...props}
     >

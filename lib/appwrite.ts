@@ -142,7 +142,7 @@ export const getcompletedSites = async () => {
 
         return sites.documents.map((doc: Models.Document) => ({
         $id: doc.$id,
-        Name: doc.Name, // Ensure these fields exist in the Document
+        Name: doc.Name, 
         Location: doc.Location,
         Progress: doc.Progress,
         Image: doc.Image
@@ -153,3 +153,98 @@ export const getcompletedSites = async () => {
     }
     
 }
+
+export const getConstructsBySiteId = async (siteName: string) => {
+    try {
+        const collectionId = siteName.toLowerCase().replace(/\s+/g, '');
+        const siteSpecificDatabaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
+
+        const constructs = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            collectionId
+        );
+
+        const constructData = await Promise.all(
+            constructs.documents.map(async (doc: Models.Document) => {
+                // Truncate and format the constructId to meet Appwrite's requirements
+                const constructId = `${siteName.toUpperCase().replace(/\W+/g, '')}-${doc.ID}`.slice(0, 36);
+
+                
+                const inspections = await databases.listDocuments(
+                    siteSpecificDatabaseId,
+                    constructId,
+                    [
+                        Query.orderDesc("InspectionDate"),
+                        Query.limit(1),
+                    ]
+                );
+
+                const latestInspection = inspections.documents[0];
+                const lastInspectionDate = latestInspection?.InspectionDate || null;
+                const progress = latestInspection?.Progress || null;
+
+                return {
+                    id: doc.ID,
+                    constructType: doc.ConstructType,
+                    lastInspection: lastInspectionDate,
+                    progress: progress,
+                };
+            })
+        );
+
+        return constructData;
+    } catch (error: any) {
+        console.error("Error fetching constructs with inspection data:", error);
+        throw new Error(error);
+    }
+};
+
+interface InspectionData {
+  id: string;
+  height: number;
+  width: number;
+  date: string;
+  progress: number;
+}
+
+export async function getLatestInspectionData(siteName: string, constructId: string): Promise<{ latest: InspectionData; secondLatest?: InspectionData }> {
+  try {
+    // Construct the database and collection IDs
+    const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
+    const collectionId = `${siteName.toUpperCase().replace(/\s+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
+
+    // Query the collection for documents, sorted by inspection date (descending)
+    const response = await databases.listDocuments(databaseId, collectionId, [
+      Query.orderDesc('InspectionDate'),
+      Query.limit(2), // Only fetch the two most recent documents
+    ]);
+
+    // Extract and structure the data from the response
+    const [latestDoc, secondLatestDoc] = response.documents;
+
+    const latest = {
+      id: latestDoc.ID,
+      height: latestDoc.Height,
+      width: latestDoc.Width,
+      date: latestDoc.InspectionDate,
+      progress: latestDoc.Progress,
+    };
+
+    const secondLatest = secondLatestDoc
+      ? {
+          id: secondLatestDoc.ID,
+          height: secondLatestDoc.Height,
+          width: secondLatestDoc.Width,
+          date: secondLatestDoc.InspectionDate,
+          progress: secondLatestDoc.Progress,
+        }
+      : undefined;
+
+    return { latest, secondLatest };
+  } catch (error) {
+    console.error('Error fetching inspection data:', error);
+    throw new Error('Failed to retrieve inspection data');
+  }
+}
+
+

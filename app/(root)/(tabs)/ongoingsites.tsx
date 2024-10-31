@@ -7,11 +7,21 @@ import { getCurrentUser, getOnGoingSites, getUsername } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import useAppwrite from '@/lib/useAppwrite';
 
+
+interface SiteData {
+    $id: string;
+    Name: string;
+    Location: string;
+    Progress: number;
+    Image: string;
+}
+
 const OnGoingSites = () => {
     const { user, setUser } = useGlobalContext();
-    
+    const { isLoggedIn, isLoading } = useGlobalContext();
     const { data: onGoingSitesData, refetch } = useAppwrite(getOnGoingSites);
     const [Refreshing, setRefreshing] = useState(false);
+
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -23,9 +33,18 @@ const OnGoingSites = () => {
         router.push("/(root)/(tabs)/completedsites");
     };
 
-    const goToConstructDb = () => {
-        router.push("/(other)/constructdb");
+    const gotoProfile = () => {
+        router.push("/(root)/(tabs)/profile");
     };
+
+    function goToConstructDb(siteData:SiteData) {
+        const collectionId = siteData.Name.toLowerCase().replace(/\s/g, '');
+        console.log(collectionId)
+        router.push({
+            pathname: "/(root)/(other)/constructdb",
+            params: { siteData: JSON.stringify(siteData),collectionId },
+        });
+    }
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -40,21 +59,39 @@ const OnGoingSites = () => {
     return (
         <SafeAreaView className='bg-white'>
             <ScrollView className="bg-gray-100">
-                {/* Header Section */}
+            {/* Header Section */}
+            <TouchableOpacity onPress={gotoProfile}>
                 <View className="flex-row items-center px-4 py-4 bg-white">
-                    {user.avatar ? (
-                        <Image
-                            source={{ uri: user.avatar }} // This should point to the avatar URL
+                    {isLoggedIn && user ? (
+                        <>
+                        {user.avatar ? (
+                            <Image
+                            source={{ uri: user.avatar }} // Avatar URL
                             style={{ width: 50, height: 50, borderRadius: 50 }} // Customize size and shape
-                        />
+                            />
+                        ) : (
+                            <Image
+                            source={require('@/assets/icons/profile-icon.png')} // Fallback avatar if logged in but no avatar available
+                            style={{ width: 50, height: 50, borderRadius: 50 }} // Customize size and shape
+                            />
+                        )}
+                        <Text className="text-2xl font-bold ml-4 color-primary-101">
+                            Hello, {user.username.split(" ")[0]} 👋
+                        </Text>
+                        </>
                     ) : (
+                        <>
                         <Image
-                            source={require('@/assets/icons/profile-icon.png')} // Fallback avatar
+                            source={require('@/assets/icons/profile-icon.png')} // Generic image when not logged in
                             style={{ width: 50, height: 50, borderRadius: 50 }} // Customize size and shape
                         />
+                        <Text className="text-2xl font-bold ml-4 color-primary-101">
+                            Hello, name 👋
+                        </Text>
+                        </>
                     )}
-                    <Text className="text-2xl font-bold ml-4 color-primary-101">Hello, {user.username.split(" ")[0]} 👋</Text>
                 </View>
+            </TouchableOpacity>
 
                 {/* Search bar */}
                 <View className="flex-row items-center px-4 py-2 mt-6 mx-6 bg-[#f2e0d0] rounded-lg">
@@ -83,7 +120,7 @@ const OnGoingSites = () => {
                     data={onGoingSitesData}
                     keyExtractor={item => item.$id}
                     renderItem={({ item }) => (
-                        <TouchableOpacity onPress={goToConstructDb}>
+                        <TouchableOpacity onPress={() => goToConstructDb(item)}>
                             <View className="flex-row items-center bg-white p-4 mb-4 rounded-lg shadow-sm">
                                 {item.Image ? (
                                     <Image

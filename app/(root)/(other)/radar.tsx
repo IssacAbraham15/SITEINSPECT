@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
+import Svg, { Polygon } from 'react-native-svg';
 import { styled } from 'nativewind';
-import { FontAwesome } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { Magnetometer } from 'expo-sensors';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
-const Radar = () => {
+const { width } = Dimensions.get('window');
+
+const RadarScreen = () => {
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [bearing, setBearing] = useState(0);
+  const [distance, setDistance] = useState(0);
+  const [heading, setHeading] = useState(0); // Phone's orientation
 
-  function goBack() {
-    router.back()
-  }
+  const navigation = useNavigation();
 
-
+  // Request location permission
   useEffect(() => {
     const requestLocationPermission = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -33,165 +37,123 @@ const Radar = () => {
     requestLocationPermission();
   }, []);
 
-  const radarHTML = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Radar Navigation with Stylized Arrow</title>
-      <style>
-        body {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          background-color: #e0f7fa;
-        }
-        canvas {
-          border: 5px solid #00796b;
-          background-color: #ffffff;
-          box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .distance {
-          font-size: 24px;
-          color: #004d40;
-          margin-top: 15px;
-          text-align: center;
-          font-family: Arial, sans-serif;
-        }
-      </style>
-    </head>
-    <body>
-      <div id="radar-container">
-        <canvas id="radar" width="300" height="300"></canvas>
-        <div class="distance" id="distance"></div>
-      </div>
-      <script>
-        const canvas = document.getElementById("radar");
-        const ctx = canvas.getContext("2d");
-        const distanceDisplay = document.getElementById("distance");
-        const destination = {
-          lat: 25.307835,  // Destination latitude
-          lng: 55.339725, // Destination longitude
-        };
-        let bounceOffset = 0;
-        let bounceDirection = 1;
+  // Calculate distance and bearing to a destination
+  useEffect(() => {
+    if (userLocation) {
+      const destination = { lat: 25.1010380, lng: 55.1625275 }; // Example destination coordinates
+      const calculatedDistance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        destination.lat,
+        destination.lng
+      );
+      setDistance(calculatedDistance);
 
-        function degreesToRadians(degrees) {
-          return degrees * (Math.PI / 180);
-        }
+      const calculatedBearing = calculateBearing(
+        userLocation.latitude,
+        userLocation.longitude,
+        destination.lat,
+        destination.lng
+      );
+      setBearing(calculatedBearing);
+    }
+  }, [userLocation]);
 
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-          const R = 6371e3;  // Earth radius in meters
-          const lat1Rad = degreesToRadians(lat1);
-          const lat2Rad = degreesToRadians(lat2);
-          const diffLat = degreesToRadians(lat2 - lat1);
-          const diffLong = degreesToRadians(lon2 - lon1);
-          const a = Math.sin(diffLat / 2) * Math.sin(diffLat / 2) +
-                    Math.cos(lat1Rad) * Math.cos(lat2Rad) *
-                    Math.sin(diffLong / 2) * Math.sin(diffLong / 2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          return R * c;
-        }
+  // Magnetometer to get phone's heading
+  useEffect(() => {
+    const subscribe = Magnetometer.addListener((data) => {
+      let { x, y } = data;
+      let angle = Math.atan2(y, x) * (180 / Math.PI);
+      setHeading((angle + 360) % 360); // Normalize angle to be between 0 and 360
+    });
 
-        function calculateBearing(lat1, lon1, lat2, lon2) {
-          const lat1Rad = degreesToRadians(lat1);
-          const lat2Rad = degreesToRadians(lat2);
-          const diffLong = degreesToRadians(lon2 - lon1);
-          const y = Math.sin(diffLong) * Math.cos(lat2Rad);
-          const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
-                    Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(diffLong);
-          const bearing = Math.atan2(y, x);
-          return (bearing * (180 / Math.PI) + 360) % 360;
-        }
+    return () => subscribe.remove(); // Cleanup listener on unmount
+  }, []);
 
-        function updateArrow(bearing) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          // Draw the transparent green square
-          ctx.fillStyle = "rgba(102, 187, 106, 0.3)";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Helper functions for distance and bearing calculation
+  const degreesToRadians = (degrees: number) => degrees * (Math.PI / 180);
 
-          // Adjust bounceOffset for the bounce effect
-          if (bounceOffset > 15) bounceDirection = -1;  // Limit the bounce range
-          if (bounceOffset < -15) bounceDirection = 1;
-          bounceOffset += bounceDirection * 1;  // Speed of the bounce
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371e3; // Earth radius in meters
+    const lat1Rad = degreesToRadians(lat1);
+    const lat2Rad = degreesToRadians(lat2);
+    const diffLat = degreesToRadians(lat2 - lat1);
+    const diffLong = degreesToRadians(lon2 - lon1);
+    const a =
+      Math.sin(diffLat / 2) * Math.sin(diffLat / 2) +
+      Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(diffLong / 2) * Math.sin(diffLong / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
-          // Save the current context state
-          ctx.save();
-          // Translate to the center of the canvas
-          ctx.translate(canvas.width / 2, canvas.height / 2);
+  const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const lat1Rad = degreesToRadians(lat1);
+    const lat2Rad = degreesToRadians(lat2);
+    const diffLong = degreesToRadians(lon2 - lon1);
+    const y = Math.sin(diffLong) * Math.cos(lat2Rad);
+    const x =
+      Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+      Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(diffLong);
+    const bearing = Math.atan2(y, x);
+    return (bearing * (180 / Math.PI) + 360) % 360;
+  };
 
-          // Calculate bounce in the direction of the arrow
-          const bounceDistanceX = bounceOffset * Math.cos(degreesToRadians(bearing));
-          const bounceDistanceY = bounceOffset * Math.sin(degreesToRadians(bearing));
-          
-          // Move in the direction of the arrow's bearing
-          ctx.translate(bounceDistanceX, -bounceDistanceY);
-
-          // Rotate the canvas based on the bearing (pointing direction)
-          ctx.rotate(degreesToRadians(bearing));
-
-          // Draw the arrow
-          ctx.beginPath();
-          ctx.moveTo(0, -70);  // Arrow tip
-          ctx.lineTo(25, 40);  // Bottom right
-          ctx.lineTo(0, 20);   // Middle point
-          ctx.lineTo(-25, 40); // Bottom left
-          ctx.closePath();
-
-          ctx.fillStyle = "#66bb6a";  // Lighter green
-          ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
-          ctx.shadowBlur = 10;
-          ctx.fill();
-          
-          // Restore the context state
-          ctx.restore();
-        }
-
-        function initializeRadar(lat, lng) {
-          const distance = calculateDistance(lat, lng, destination.lat, destination.lng);
-          distanceDisplay.textContent = Math.round(distance) + ' meters to destination';
-          const bearing = calculateBearing(lat, lng, destination.lat, destination.lng);
-          updateArrow(bearing);
-        }
-
-        if (${userLocation ? true : false}) {
-          initializeRadar(${userLocation ? userLocation.latitude : 0}, ${userLocation ? userLocation.longitude : 0});
-        } else {
-          console.error("Location not available");
-        }
-
-        // Animation loop to keep the arrow bouncing
-        function animate() {
-          if (${userLocation ? true : false}) {
-            initializeRadar(${userLocation ? userLocation.latitude : 0}, ${userLocation ? userLocation.longitude : 0});
-          }
-          requestAnimationFrame(animate);
-        }
-
-        animate();  // Start the animation loop
-      </script>
-    </body>
-    </html>
-  `;
+  const circleRadius = width * 0.6;
+  const arrowSize = circleRadius * 0.1; // Set arrow size to 10% of circle radius
 
   return (
-    <SafeAreaView className="flex-1 bg-secondary-102">
-      <TouchableOpacity className='left-5 p-2' onPress={goBack}>
-          <FontAwesome name="arrow-left" size={30} color="#800E13" />
-      </TouchableOpacity>
-      {hasLocationPermission && (
-        <WebView
-          originWhitelist={['*']}
-          source={{ html: radarHTML }}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          style={{ flex: 1 }}
-        />
-      )}
-    </SafeAreaView>
+    <SafeAreaView className='flex-1 bg-white'>
+    <View className="flex-1 bg-white">
+      {/* Header with back button and title */}
+      <View className="flex-row items-center p-4">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <View className="bg-red-800 p-3 rounded-full">
+            <Text className="text-white text-lg">{'←'}</Text>
+          </View>
+        </TouchableOpacity>
+        <Text className="text-red-800 text-lg font-bold">Construct Radar</Text>
+      </View>
+
+      {/* Radar area */}
+      <View className="flex-1 items-center justify-center">
+        {hasLocationPermission ? (
+          <View className="items-center bg-green-500 p-6 rounded-lg">
+            {/* Arrow that points based on bearing */}
+            <Svg height={circleRadius} width={circleRadius} style={{ position: 'relative' }}>
+              <Polygon
+                points={`
+                  ${circleRadius / 2},${arrowSize / 2} 
+                  ${(circleRadius / 2) + arrowSize / 2},${arrowSize + 40} 
+                  ${(circleRadius / 2) - arrowSize / 2},${arrowSize + 40}
+                `}
+                fill="#fff"
+                stroke="#fff"
+                strokeWidth="2"
+                originX={circleRadius / 2}
+                originY={circleRadius / 2}
+                rotation={bearing - heading} // Arrow rotates based on phone's heading
+              />
+            </Svg>
+            
+            {/* Distance */}
+            <Text className="text-white text-3xl mt-4">
+              {Math.round(distance)} <Text className="text-xl">m</Text> {/* Display distance in meters */}
+            </Text>
+          </View>
+        ) : (
+          <Text className="text-red-500 text-center">Location permission is required.</Text>
+        )}
+
+        {/* Example image (for bottom floorplan display) */}
+        <View className="mt-8">
+          <Svg height={120} width={width * 0.8}>
+            {/* Add the image or SVG content of your floor plan here */}
+          </Svg>
+        </View>
+      </View>
+    </View>
+  </SafeAreaView>
   );
 };
 
-export default styled(Radar);
+export default styled(RadarScreen);
