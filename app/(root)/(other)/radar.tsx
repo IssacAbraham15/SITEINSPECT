@@ -37,10 +37,10 @@ const RadarScreen = () => {
     requestLocationPermission();
   }, []);
 
-  // Calculate distance and bearing to a destination
+  // Calculate distance and bearing to a destination 25.340353, 55.428276
   useEffect(() => {
     if (userLocation) {
-      const destination = { lat: 25.1010380, lng: 55.1625275 }; // Example destination coordinates
+      const destination = { lat: 25.340353, lng: 55.428276 }; // Example destination coordinates
       const calculatedDistance = calculateDistance(
         userLocation.latitude,
         userLocation.longitude,

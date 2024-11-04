@@ -205,6 +205,8 @@ interface InspectionData {
   width: number;
   date: string;
   progress: number;
+  notes: string;
+  image: string | null; // Image can be null if not available
 }
 
 export async function getLatestInspectionData(siteName: string, constructId: string): Promise<{ latest: InspectionData; secondLatest?: InspectionData }> {
@@ -216,18 +218,19 @@ export async function getLatestInspectionData(siteName: string, constructId: str
     // Query the collection for documents, sorted by inspection date (descending)
     const response = await databases.listDocuments(databaseId, collectionId, [
       Query.orderDesc('InspectionDate'),
-      Query.limit(2), // Only fetch the two most recent documents
+      Query.limit(2), // Fetch only the two most recent documents
     ]);
 
-    // Extract and structure the data from the response
     const [latestDoc, secondLatestDoc] = response.documents;
 
     const latest = {
       id: latestDoc.ID,
-      height: latestDoc.Height,
+      height: latestDoc.Height, 
       width: latestDoc.Width,
       date: latestDoc.InspectionDate,
       progress: latestDoc.Progress,
+      notes: latestDoc.Notes || "...", // Default to "..." if Notes are missing
+      image: latestDoc.Image || null, // Default to null if no image is available
     };
 
     const secondLatest = secondLatestDoc
@@ -237,6 +240,8 @@ export async function getLatestInspectionData(siteName: string, constructId: str
           width: secondLatestDoc.Width,
           date: secondLatestDoc.InspectionDate,
           progress: secondLatestDoc.Progress,
+          notes: secondLatestDoc.Notes || "...", // Default for missing Notes
+          image: secondLatestDoc.Image || null, // Default to null for missing Image
         }
       : undefined;
 
@@ -248,3 +253,56 @@ export async function getLatestInspectionData(siteName: string, constructId: str
 }
 
 
+
+export async function getAllInspectionDates(siteName: string, constructId: string): Promise<string[]> {
+  try {
+    const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36); // Format database name based on site name
+    const collectionId = `${siteName.toUpperCase().replace(/\s+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36); // Format collection ID as "<SITE>-<CONSTRUCT>"
+
+    // Retrieve all documents, selecting only the 'date' field for efficiency
+    const response = await databases.listDocuments(databaseId, collectionId, [
+      Query.select(['InspectionDate']),
+      Query.orderDesc('InspectionDate'), // Sort dates in descending order
+    ]);
+
+    // Extract and format the dates, ensuring each date appears only once
+    const dates = response.documents.map(doc => doc.InspectionDate);
+    const uniqueDates = Array.from(new Set(dates)); // Remove any duplicates
+    return uniqueDates;
+    
+  } catch (error) {
+    console.error('Error fetching all inspection dates:', error);
+    return [];
+  }
+}
+
+export async function getInspectionDataByDate(siteName: string, constructId: string, date: string): Promise<InspectionData | null> {
+    try {
+        const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
+        const collectionId = `${siteName.toUpperCase().replace(/\W+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
+
+        const response = await databases.listDocuments(databaseId, collectionId, [
+            Query.equal('InspectionDate', date), // Query for the specific date
+        ]);
+
+        if (response.documents.length === 0) {
+            return null; // No inspection data found for the given date
+        }
+
+        const doc = response.documents[0]; // Assuming we want the first document found
+        const latest = {
+            id: doc.ID,
+            height: doc.Height, 
+            width: doc.Width,
+            date: doc.InspectionDate,
+            progress: doc.Progress,
+            notes: doc.Notes || "...", // Default to "..." if Notes are missing
+            image: doc.Image || null, // Default to null if no image is available
+        };
+
+        return latest;
+    } catch (error) {
+        console.error('Error fetching inspection data by date:', error);
+        throw new Error('Failed to retrieve inspection data by date');
+    }
+}

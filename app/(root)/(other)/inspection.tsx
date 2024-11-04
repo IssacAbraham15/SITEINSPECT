@@ -28,7 +28,7 @@ const Inspection = () => {
   };
 
   return (
-    <SafeAreaView className="flex p-6 bg-gray-50">
+    <SafeAreaView className="flex p-6 bg-white">
       <ScrollView className="">
         {/* Header Section with Date */}
         <View className="flex-row items-center justify-between px-4 py-2 bg-white shadow-md">
@@ -137,7 +137,7 @@ const Inspection = () => {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={goToMeasure} className="flex-1 bg-white border border-[#800000] p-4 rounded-lg ml-2 items-center">
-              <FontAwesome name="ruler" size={24} color="#800000" />
+              <FontAwesome name="adjust" size={24} color="#800000" />
               <Text className="text-[#800000] mt-2">Measure</Text>
             </TouchableOpacity>
           </View>
