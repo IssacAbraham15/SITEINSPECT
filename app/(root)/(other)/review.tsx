@@ -14,6 +14,7 @@ interface InspectionData {
   image: string | null;
 }
 
+
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const day = String(date.getDate()).padStart(2, '0');
@@ -74,7 +75,7 @@ export default function Review() {
     <SafeAreaView className="flex-1 p-6 bg-white">
       {/* Header Section with Date */}
       <View className="flex-row items-center justify-between px-4 py-2 bg-white shadow-sm">
-        <TouchableOpacity onPress={() => router.back()} className="items-center justify-center">
+        <TouchableOpacity onPress={() => router.push('/(root)/(other)/constructdb')} className="items-center justify-center">
           <FontAwesome name="arrow-left" size={24} color="#800000" />
         </TouchableOpacity>
         <Text className="text-lg font-bold text-gray-700">
@@ -169,7 +170,18 @@ export default function Review() {
       </View>
 
       {/* Inspect Button */}
-      <TouchableOpacity onPress={() => router.push('/(root)/(other)/inspection')} className="bg-[#800000] p-3 rounded-full mt-20 mx-20">
+      <TouchableOpacity
+        onPress={() =>
+          router.push({
+            pathname: '/(root)/(other)/inspection',
+            params: {
+              constructId: constructIdString,
+              siteName: siteNameString,
+            },
+          })
+        }
+        className="bg-[#800000] p-3 rounded-full mt-20 mx-20"
+      >
         <Text className="text-white text-center font-bold text-lg">INSPECT</Text>
       </TouchableOpacity>
     </SafeAreaView>

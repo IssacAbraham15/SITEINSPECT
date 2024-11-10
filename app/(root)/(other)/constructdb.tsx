@@ -41,7 +41,7 @@ const formatDate = (date: Date): string => {
 
 
 export default function constructdb() {
-    const { siteData} = useLocalSearchParams();
+    const {siteData} = useLocalSearchParams();
     const site = siteData ? JSON.parse(Array.isArray(siteData) ? siteData[0] : siteData) : null;
     const [constructData, setConstructData] = useState<ConstructData[]>([]);
 

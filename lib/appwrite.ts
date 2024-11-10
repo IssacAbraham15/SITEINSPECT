@@ -156,7 +156,7 @@ export const getcompletedSites = async () => {
 
 export const getConstructsBySiteId = async (siteName: string) => {
     try {
-        const collectionId = siteName.toLowerCase().replace(/\s+/g, '');
+        const collectionId = siteName.toLowerCase().replace(/\s+/g, '').slice(0, 36);
         const siteSpecificDatabaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
 
         const constructs = await databases.listDocuments(
@@ -167,7 +167,7 @@ export const getConstructsBySiteId = async (siteName: string) => {
         const constructData = await Promise.all(
             constructs.documents.map(async (doc: Models.Document) => {
                 // Truncate and format the constructId to meet Appwrite's requirements
-                const constructId = `${siteName.toUpperCase().replace(/\W+/g, '')}-${doc.ID}`.slice(0, 36);
+                const constructId = `${siteName.toUpperCase().replace(/\s+/g, '')}-${doc.Id}`.slice(0, 36);
 
                 
                 const inspections = await databases.listDocuments(
@@ -184,7 +184,7 @@ export const getConstructsBySiteId = async (siteName: string) => {
                 const progress = latestInspection?.Progress || null;
 
                 return {
-                    id: doc.ID,
+                    id: doc.Id,
                     constructType: doc.ConstructType,
                     lastInspection: lastInspectionDate,
                     progress: progress,
@@ -306,3 +306,16 @@ export async function getInspectionDataByDate(siteName: string, constructId: str
         throw new Error('Failed to retrieve inspection data by date');
     }
 }
+
+export const addInspectionData = async (siteName: string, constructId: string, inspectionData: any) => {
+  const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
+  const collectionId = `${siteName.toUpperCase().replace(/\W+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
+
+  try {
+    const response = await databases.createDocument(databaseId, collectionId, 'unique()', inspectionData);
+    return response;
+  } catch (error) {
+    console.error("Error adding new inspection data:", error);
+    return null;
+  }
+};
