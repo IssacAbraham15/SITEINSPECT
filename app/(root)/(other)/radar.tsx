@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
-import Svg, { Polygon } from 'react-native-svg';
+import Svg, { Circle, Polygon, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { styled } from 'nativewind';
 import { Magnetometer } from 'expo-sensors';
-import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
@@ -16,8 +15,6 @@ const RadarScreen = () => {
   const [bearing, setBearing] = useState(0);
   const [distance, setDistance] = useState(0);
   const [heading, setHeading] = useState(0); // Phone's orientation
-
-  const navigation = useNavigation();
 
   // Request location permission
   useEffect(() => {
@@ -37,25 +34,36 @@ const RadarScreen = () => {
     requestLocationPermission();
   }, []);
 
-  // Calculate distance and bearing to a destination 25.101285, 55.162669
+  // Calculate distance and bearing to a destination every 3 seconds
   useEffect(() => {
     if (userLocation) {
-      const destination = { lat: 25.101285, lng: 55.162669 }; // Example destination coordinates
-      const calculatedDistance = calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        destination.lat,
-        destination.lng
-      );
-      setDistance(calculatedDistance);
+      const updateDistanceAndBearing = () => {
+        const destination = { lat: 25.101285, lng: 55.162669 };
+        const calculatedDistance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          destination.lat,
+          destination.lng
+        );
+        setDistance(calculatedDistance);
 
-      const calculatedBearing = calculateBearing(
-        userLocation.latitude,
-        userLocation.longitude,
-        destination.lat,
-        destination.lng
-      );
-      setBearing(calculatedBearing);
+        const calculatedBearing = calculateBearing(
+          userLocation.latitude,
+          userLocation.longitude,
+          destination.lat,
+          destination.lng
+        );
+        setBearing(calculatedBearing);
+      };
+
+      // Initial call
+      updateDistanceAndBearing();
+
+      // Set interval to update every 3 seconds
+      const interval = setInterval(updateDistanceAndBearing, 3000);
+
+      // Cleanup interval on component unmount
+      return () => clearInterval(interval);
     }
   }, [userLocation]);
 
@@ -67,7 +75,7 @@ const RadarScreen = () => {
       setHeading((angle + 360) % 360); // Normalize angle to be between 0 and 360
     });
 
-    return () => subscribe.remove(); // Cleanup listener on unmount
+    return () => subscribe.remove();
   }, []);
 
   // Helper functions for distance and bearing calculation
@@ -86,7 +94,7 @@ const RadarScreen = () => {
     return R * c;
   };
 
-  const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const calculateBearing = (lat1: any, lon1: number, lat2: number, lon2: number) => {
     const lat1Rad = degreesToRadians(lat1);
     const lat2Rad = degreesToRadians(lat2);
     const diffLong = degreesToRadians(lon2 - lon1);
@@ -99,60 +107,68 @@ const RadarScreen = () => {
   };
 
   const circleRadius = width * 0.6;
-  const arrowSize = circleRadius * 0.1; // Set arrow size to 10% of circle radius
+  const arrowSize = circleRadius * 0.1;
 
   return (
-    <SafeAreaView className='flex-1 bg-white'>
-    <View className="flex-1 bg-white">
-      {/* Header with back button and title */}
-      <View className="flex-row items-center p-4">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <View className="bg-red-800 p-3 rounded-full">
-            <Text className="text-white text-lg">{'←'}</Text>
-          </View>
-        </TouchableOpacity>
-        <Text className="text-red-800 text-lg font-bold">Construct Radar</Text>
-      </View>
+    <SafeAreaView className="flex-1 bg-gray-800">
+      <View className="flex-1">
+        {/* Header with back button and title */}
+        <View className="flex-row items-center p-4">
+          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+            <View className="bg-red-800 p-3 rounded-full">
+              <Text className="text-white text-lg">{'←'}</Text>
+            </View>
+          </TouchableOpacity>
+          <Text className="text-white text-lg font-bold">Construct Radar</Text>
+        </View>
 
-      {/* Radar area */}
-      <View className="flex-1 items-center justify-center">
-        {hasLocationPermission ? (
-          <View className="items-center bg-green-500 p-6 rounded-lg">
-            {/* Arrow that points based on bearing */}
-            <Svg height={circleRadius} width={circleRadius} style={{ position: 'relative' }}>
-              <Polygon
-                points={`
-                  ${circleRadius / 2},${arrowSize / 2} 
-                  ${(circleRadius / 2) + arrowSize / 2},${arrowSize + 40} 
-                  ${(circleRadius / 2) - arrowSize / 2},${arrowSize + 40}
-                `}
-                fill="#fff"
-                stroke="#fff"
-                strokeWidth="2"
-                originX={circleRadius / 2}
-                originY={circleRadius / 2}
-                rotation={bearing - heading} // Arrow rotates based on phone's heading
-              />
-            </Svg>
-            
-            {/* Distance */}
-            <Text className="text-white text-3xl mt-4">
-              {Math.round(distance)} <Text className="text-xl">m</Text> {/* Display distance in meters */}
-            </Text>
-          </View>
-        ) : (
-          <Text className="text-red-500 text-center">Location permission is required.</Text>
-        )}
+        {/* Radar area */}
+        <View className="flex-1 items-center justify-center">
+          {hasLocationPermission ? (
+            <View className="items-center p-6 rounded-full">
+              {/* Radar background with gradient */}
+              <Svg height={circleRadius} width={circleRadius}>
+                <Defs>
+                  <RadialGradient
+                    id="radarGradient"
+                    cx="50%"
+                    cy="50%"
+                    r="50%"
+                    fx="50%"
+                    fy="50%"
+                  >
+                    <Stop offset="0%" stopColor="#ffffff" stopOpacity="0.1" />
+                    <Stop offset="100%" stopColor="#00ff00" stopOpacity="0.3" />
+                  </RadialGradient>
+                </Defs>
+                
+                {/* Outer Circle Layers */}
+                <Circle cx={circleRadius / 2} cy={circleRadius / 2} r={circleRadius / 2 - 20} fill="url(#radarGradient)" />
+                <Circle cx={circleRadius / 2} cy={circleRadius / 2} r={(circleRadius / 2) * 0.75} stroke="rgba(255, 255, 255, 0.2)" strokeWidth="2" />
+                <Circle cx={circleRadius / 2} cy={circleRadius / 2} r={(circleRadius / 2) * 0.5} stroke="rgba(255, 255, 255, 0.2)" strokeWidth="2" />
+                <Circle cx={circleRadius / 2} cy={circleRadius / 2} r={(circleRadius / 2) * 0.25} stroke="rgba(255, 255, 255, 0.2)" strokeWidth="2" />
 
-        {/* Example image (for bottom floorplan display) */}
-        <View className="mt-8">
-          <Svg height={120} width={width * 0.8}>
-            {/* Add the image or SVG content of your floor plan here */}
-          </Svg>
+                {/* Arrow that points based on bearing */}
+                <Polygon
+                  points={`${circleRadius / 2},${arrowSize / 2} ${(circleRadius / 2) + arrowSize / 2},${arrowSize + 40} ${(circleRadius / 2) - arrowSize / 2},${arrowSize + 40}`}
+                  fill="white"
+                  originX={circleRadius / 2}
+                  originY={circleRadius / 2}
+                  rotation={bearing - heading}
+                />
+              </Svg>
+
+              {/* Distance */}
+              <Text className="text-white text-3xl mt-4 font-semibold">
+                {Math.round(distance)} <Text className="text-lg">m</Text>
+              </Text>
+            </View>
+          ) : (
+            <Text className="text-red-500 text-center">Location permission is required.</Text>
+          )}
         </View>
       </View>
-    </View>
-  </SafeAreaView>
+    </SafeAreaView>
   );
 };
 
