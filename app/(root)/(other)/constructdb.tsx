@@ -108,8 +108,8 @@ export default function constructdb() {
                 <View className={`flex-row justify-center p-4 items-center ${index % 2 === 0 ? 'bg-gray-200' : 'bg-white'} border-b border-gray-200`}>
                   <Text className="flex-1 right-3 text-center text-xs">{data.id}</Text>
                   <Text className="flex-1 right-3 text-center text-xs">{data.constructType}</Text>
-                  <Text className="flex-1 text-center text-xs">{data.lastInspection ? formatDate(new Date(data.lastInspection)) : 'N/A'}</Text>
-                  <Text className="flex-1 text-center text-xs">{data.progress ?? 'N/A'}</Text>
+                  <Text className="flex-1 text-center text-xs">{data.lastInspection ? formatDate(new Date(data.lastInspection)) : 'No Inspections Recorded'}</Text>
+                  <Text className="flex-1 text-center text-xs">{data.progress ?? '0'}%</Text>
                   
                 </View>
                 </TouchableOpacity>

@@ -38,11 +38,11 @@ const OnGoingSites = () => {
     };
 
     function goToConstructDb(siteData:SiteData) {
-        const collectionId = siteData.Name.toLowerCase().replace(/\s/g, '');
+        const collectionId = siteData.Name.toLowerCase().replace(/\s/g,'');
         console.log(collectionId)
         router.push({
             pathname: "/(root)/(other)/constructdb",
-            params: { siteData: JSON.stringify(siteData),collectionId },
+            params: { siteData: JSON.stringify(siteData) },
         });
     }
 

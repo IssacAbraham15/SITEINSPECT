@@ -156,7 +156,7 @@ export const getcompletedSites = async () => {
 
 export const getConstructsBySiteId = async (siteName: string) => {
     try {
-        const collectionId = siteName.toLowerCase().replace(/\s+/g, '').slice(0, 36);
+        const collectionId = `${siteName.toLowerCase().replace(/\s+/g, '')}-collection`.slice(0, 36);
         const siteSpecificDatabaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
 
         const constructs = await databases.listDocuments(
@@ -167,25 +167,25 @@ export const getConstructsBySiteId = async (siteName: string) => {
         const constructData = await Promise.all(
             constructs.documents.map(async (doc: Models.Document) => {
                 // Truncate and format the constructId to meet Appwrite's requirements
-                const constructId = `${siteName.toUpperCase().replace(/\s+/g, '')}-${doc.Id}`.slice(0, 36);
-
+                const constructId = `${siteName.toLowerCase().replace(/\s+/g, '')}-${doc.ID}`.slice(0, 36);
+                
                 
                 const inspections = await databases.listDocuments(
                     siteSpecificDatabaseId,
                     constructId,
                     [
-                        Query.orderDesc("InspectionDate"),
+                        Query.orderDesc("inspectionDate"),
                         Query.limit(1),
                     ]
                 );
 
                 const latestInspection = inspections.documents[0];
-                const lastInspectionDate = latestInspection?.InspectionDate || null;
+                const lastInspectionDate = latestInspection?.inspectionDate || null;
                 const progress = latestInspection?.Progress || null;
 
                 return {
-                    id: doc.Id,
-                    constructType: doc.ConstructType,
+                    id: doc.ID,
+                    constructType: doc.constructType,
                     lastInspection: lastInspectionDate,
                     progress: progress,
                 };
