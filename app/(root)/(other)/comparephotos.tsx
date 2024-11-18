@@ -46,7 +46,7 @@ const ComparePhotos = () => {
         type: 'image/jpeg',
       } as any);
 
-      const response = await fetch('http://10.152.137.119:5000/compare-photos', {
+      const response = await fetch('http://192.168.0.138:5000/compare-photos', {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',
