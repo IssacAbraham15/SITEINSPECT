@@ -1,5 +1,7 @@
 import { data } from '@/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 import { Account, Avatars, Client, Databases, ID, Models, Query, Storage, } from 'react-native-appwrite';
 
 export const appwriteConfig = {
@@ -28,6 +30,7 @@ client
 const account = new Account(client);
 const avatars = new Avatars(client);
 const databases = new Databases(client);
+const storage = new Storage(client);
 
 
 export async function getUsername() {
@@ -213,11 +216,11 @@ export async function getLatestInspectionData(siteName: string, constructId: str
   try {
     // Construct the database and collection IDs
     const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
-    const collectionId = `${siteName.toUpperCase().replace(/\s+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
+    const collectionId = `${siteName.toLowerCase().replace(/\s+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
 
     // Query the collection for documents, sorted by inspection date (descending)
     const response = await databases.listDocuments(databaseId, collectionId, [
-      Query.orderDesc('InspectionDate'),
+      Query.orderDesc('inspectionDate'),
       Query.limit(2), // Fetch only the two most recent documents
     ]);
 
@@ -227,9 +230,9 @@ export async function getLatestInspectionData(siteName: string, constructId: str
       id: latestDoc.ID,
       height: latestDoc.Height, 
       width: latestDoc.Width,
-      date: latestDoc.InspectionDate,
+      date: latestDoc.inspectionDate,
       progress: latestDoc.Progress,
-      notes: latestDoc.Notes || "...", // Default to "..." if Notes are missing
+      notes: latestDoc.Notes || "No Notes", // Default to "..." if Notes are missing
       image: latestDoc.Image || null, // Default to null if no image is available
     };
 
@@ -238,9 +241,9 @@ export async function getLatestInspectionData(siteName: string, constructId: str
           id: secondLatestDoc.ID,
           height: secondLatestDoc.Height,
           width: secondLatestDoc.Width,
-          date: secondLatestDoc.InspectionDate,
+          date: secondLatestDoc.inspectionDate,
           progress: secondLatestDoc.Progress,
-          notes: secondLatestDoc.Notes || "...", // Default for missing Notes
+          notes: secondLatestDoc.Notes || "No Notes", // Default for missing Notes
           image: secondLatestDoc.Image || null, // Default to null for missing Image
         }
       : undefined;
@@ -257,16 +260,16 @@ export async function getLatestInspectionData(siteName: string, constructId: str
 export async function getAllInspectionDates(siteName: string, constructId: string): Promise<string[]> {
   try {
     const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36); // Format database name based on site name
-    const collectionId = `${siteName.toUpperCase().replace(/\s+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36); // Format collection ID as "<SITE>-<CONSTRUCT>"
+    const collectionId = `${siteName.toLowerCase().replace(/\s+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36); // Format collection ID as "<SITE>-<CONSTRUCT>"
 
     // Retrieve all documents, selecting only the 'date' field for efficiency
     const response = await databases.listDocuments(databaseId, collectionId, [
-      Query.select(['InspectionDate']),
-      Query.orderDesc('InspectionDate'), // Sort dates in descending order
+      Query.select(['inspectionDate']),
+      Query.orderDesc('inspectionDate'), // Sort dates in descending order
     ]);
 
     // Extract and format the dates, ensuring each date appears only once
-    const dates = response.documents.map(doc => doc.InspectionDate);
+    const dates = response.documents.map(doc => doc.inspectionDate);
     const uniqueDates = Array.from(new Set(dates)); // Remove any duplicates
     return uniqueDates;
     
@@ -279,10 +282,11 @@ export async function getAllInspectionDates(siteName: string, constructId: strin
 export async function getInspectionDataByDate(siteName: string, constructId: string, date: string): Promise<InspectionData | null> {
     try {
         const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
-        const collectionId = `${siteName.toUpperCase().replace(/\W+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
+        const collectionId = `${siteName.toLowerCase().replace(/\s+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
 
         const response = await databases.listDocuments(databaseId, collectionId, [
-            Query.equal('InspectionDate', date), // Query for the specific date
+                Query.startsWith('inspectionDate', `${date}`),
+ // Query for the specific date
         ]);
 
         if (response.documents.length === 0) {
@@ -294,7 +298,7 @@ export async function getInspectionDataByDate(siteName: string, constructId: str
             id: doc.ID,
             height: doc.Height, 
             width: doc.Width,
-            date: doc.InspectionDate,
+            date: doc.inspectionDate,
             progress: doc.Progress,
             notes: doc.Notes || "...", // Default to "..." if Notes are missing
             image: doc.Image || null, // Default to null if no image is available
@@ -309,7 +313,7 @@ export async function getInspectionDataByDate(siteName: string, constructId: str
 
 export const addInspectionData = async (siteName: string, constructId: string, inspectionData: any) => {
   const databaseId = `${siteName.toLowerCase().replace(/\s+/g, '')}-db`.slice(0, 36);
-  const collectionId = `${siteName.toUpperCase().replace(/\W+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
+  const collectionId = `${siteName.toLowerCase().replace(/\W+/g, '')}-${constructId.toUpperCase()}`.slice(0, 36);
 
   try {
     const response = await databases.createDocument(databaseId, collectionId, 'unique()', inspectionData);
@@ -317,5 +321,41 @@ export const addInspectionData = async (siteName: string, constructId: string, i
   } catch (error) {
     console.error("Error adding new inspection data:", error);
     return null;
+  }
+};
+
+export const savePhotoToBucket = async (
+  bucketId: string,
+  constructId: string,
+  siteName: string,
+  photoUri: string
+) => {
+  const date = new Date();
+  try {
+    // Get file info
+    const fileInfo = await FileSystem.getInfoAsync(photoUri);
+    if (!fileInfo.exists) {
+      throw new Error('File does not exist at the provided URI');
+    }
+
+    // Create the file object with the required properties
+    const file = {
+      uri: photoUri,
+      name: `${siteName.toLowerCase()}-${constructId.toLowerCase()}.jpg`, // Ensure the file has an extension
+      type: 'image/jpeg', // Adjust if needed based on photo format
+      size: fileInfo.size || 0, // Ensure size is included
+    };
+
+    // Upload the new file to Appwrite storage
+    const response = await storage.createFile(bucketId, 'unique()', file);
+
+    const fileUrl = `${client.config.endpoint}/storage/buckets/${bucketId}/files/${response.$id}/view?project=67042ded000030656081&project=67042ded000030656081&mode=admin`;
+
+    console.log('Photo saved successfully to Appwrite bucket!');
+    return fileUrl;
+
+  } catch (error) {
+    console.error('Error saving photo to bucket:', error);
+    throw error;
   }
 };

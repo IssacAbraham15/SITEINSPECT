@@ -4,6 +4,7 @@ const Layout=() => {
   return (
 
       <Stack>
+        <Stack.Screen name="completedsites" options={{ headerShown: false }} />
         <Stack.Screen name="constructdb" options={{ headerShown: false }} />
         <Stack.Screen name="comparephotos" options={{ headerShown: false }} />
         <Stack.Screen name="review" options={{ headerShown: false }} />

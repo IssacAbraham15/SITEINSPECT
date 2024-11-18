@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Image, ImageSourcePropType, View } from "react-native";
 
 import { icons } from "@/constants";
+import { useState } from "react";
 
 const TabIcon = ({
   source,
@@ -11,7 +12,7 @@ const TabIcon = ({
   focused: boolean;
 }) => (
   <View
-    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-general-300" : ""}`}
+    className={`flex justify-center items-center rounded-full mb-7 ${focused ? "bg-general-300" : ""}`}
   >
     <View
       className={`rounded-full w-12 h-12 items-center justify-center ${focused ? "bg-primary-900" : ""}`}
@@ -27,7 +28,9 @@ const TabIcon = ({
 );
 
 export default function Layout() {
+  const [showCompletedSites, setShowCompletedSites] = useState(false);
   return (
+    
     <Tabs
       initialRouteName="ongoingsites"
       screenOptions={{
@@ -39,9 +42,9 @@ export default function Layout() {
           borderRadius: 50,
           paddingBottom: 0, // ios only
           overflow: "hidden",
-          marginHorizontal: 20,
-          marginBottom: 20,
-          height: 78,
+          marginHorizontal: 25,
+          marginBottom: 30,
+          height: 70,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -72,18 +75,7 @@ export default function Layout() {
         }}
       /> 
 
-      <Tabs.Screen
-        name="completedsites"
-        options={{
-          title: "completedsites",
-          tabBarButton: () => null,
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.profile} focused={focused} />
-          ),
-        }}
-      /> 
-      
+     
       <Tabs.Screen
         name="profile"
         options={{
@@ -94,6 +86,10 @@ export default function Layout() {
           ),
         }}
       />
+    
+
+    
+      
       
     </Tabs>
   );

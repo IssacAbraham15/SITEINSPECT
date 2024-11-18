@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, SafeAreaView, Modal, FlatList } fr
 import { FontAwesome } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { getLatestInspectionData, getAllInspectionDates, getInspectionDataByDate } from '@/lib/appwrite';
+import { icons } from '@/constants';
 
 interface InspectionData {
   id: string;
@@ -29,7 +30,7 @@ export default function Review() {
   const constructIdString = Array.isArray(constructId) ? constructId[0] : constructId ?? '';
 
   const [latestInspection, setLatestInspection] = useState<InspectionData | null>(null);
-  const [secondLatestInspectionDate, setSecondLatestInspectionDate] = useState<string | null>(null);
+  const [secondLatestInspection, setSecondLatestInspection] = useState<InspectionData | null>(null);
   const [inspectionDates, setInspectionDates] = useState<string[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -39,7 +40,7 @@ export default function Review() {
         try {
           const { latest, secondLatest } = await getLatestInspectionData(siteNameString, constructIdString);
           setLatestInspection(latest);
-          setSecondLatestInspectionDate(secondLatest?.date || null);
+          setSecondLatestInspection(secondLatest || null);
 
           // Fetch all inspection dates for the construct
           const dates = await getAllInspectionDates(siteNameString, constructIdString);
@@ -54,6 +55,7 @@ export default function Review() {
 
   const handleDateSelection = async (date: string) => {
   setIsModalVisible(false);
+  console.log(date)
   try {
     // Fetch the latest inspection data for the selected date
     const inspectionData = await getInspectionDataByDate(siteNameString, constructIdString, date);
@@ -70,12 +72,11 @@ export default function Review() {
   }
 };
 
-
   return (
     <SafeAreaView className="flex-1 p-6 bg-white">
       {/* Header Section with Date */}
       <View className="flex-row items-center justify-between px-4 py-2 bg-white shadow-sm">
-        <TouchableOpacity onPress={() => router.push('/(root)/(other)/constructdb')} className="items-center justify-center">
+        <TouchableOpacity onPress={() => router.back()} className="items-center justify-center">
           <FontAwesome name="arrow-left" size={24} color="#800000" />
         </TouchableOpacity>
         <Text className="text-lg font-bold text-gray-700">
@@ -114,7 +115,17 @@ export default function Review() {
       <View className="mt-6 p-4 flex-row justify-between">
         <View className="w-1/2 items-center justify-center border-2 border-[#800000] p-1 rounded-lg" style={{ width: 150, height: 150 }}>
           <TouchableOpacity 
-            onPress={() => router.push('/(root)/(other)/comparephotos')} 
+            onPress={() =>
+            router.push({
+              pathname: '/comparephotos',
+              params: {
+                currentPhoto: latestInspection?.image,
+                previousPhoto: secondLatestInspection?.image,
+                previousPhotoDate: secondLatestInspection?.date, // Pass the date for the previous photo
+                constructId: constructIdString,
+                siteName: siteNameString,
+              },
+            })} 
             className="justify-center items-center w-full h-full"
           >
             {latestInspection?.image ? (
@@ -148,7 +159,7 @@ export default function Review() {
             <Text className="text-gray-700 font-bold color-primary-101 mb-1">Width: <Text className="font-medium color-gray-700">{latestInspection?.width || "N/A"} cm</Text></Text>
           </View>
           <View>
-            <Text className="text-gray-700 font-bold color-primary-101 mb-1">Last Inspection: <Text className="font-medium color-gray-700">{secondLatestInspectionDate ? formatDate(secondLatestInspectionDate) : "N/A"}</Text></Text>
+            <Text className="text-gray-700 font-bold color-primary-101 mb-1">Last Inspection: <Text className="font-medium color-gray-700">{secondLatestInspection?.date ? formatDate(secondLatestInspection.date) : "N/A"}</Text></Text>
             <Text className="text-gray-700 font-bold color-primary-101 mb-1">Progress: <Text className="font-medium color-gray-700">{latestInspection?.progress || "N/A"}%</Text></Text>
           </View>
         </View>
@@ -156,8 +167,14 @@ export default function Review() {
 
       <View className="mt-6 px-4">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.push('/(other)/radar')} className="bg-[#800000] px-10 py-4 rounded-full items-center justify-center m-auto">
-            <Text className="text-white font-medium">Locate</Text>
+          <TouchableOpacity onPress={() => router.push({
+              pathname: '/(root)/(other)/radar',
+              params: {
+                constructId: constructIdString,
+                siteName: siteNameString,
+            },
+          })} className="bg-[#800000] px-10 py-4 rounded-full items-center justify-center m-auto">
+            <Text className="text-white font-bold">LOCATE</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -180,10 +197,20 @@ export default function Review() {
             },
           })
         }
-        className="bg-[#800000] p-3 rounded-full mt-20 mx-20"
+        className="bg-[#800000] p-3 rounded-full mt-10 mx-20"
       >
         <Text className="text-white text-center font-bold text-lg">INSPECT</Text>
       </TouchableOpacity>
+
+      <View className='items-center justify-center'>
+        <TouchableOpacity onPress={()=>router.replace("/(root)/(tabs)/ongoingsites")}>
+        <View className='bg-primary-101 mt-12 p-4 rounded-full'>
+        <Image source={icons.home} tintColor="white"
+        resizeMode="contain"
+        className="w-8 h-8"/>
+        </View>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }

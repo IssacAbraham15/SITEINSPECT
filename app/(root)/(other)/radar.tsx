@@ -5,16 +5,22 @@ import Svg, { Circle, Polygon, Defs, RadialGradient, Stop } from 'react-native-s
 import { styled } from 'nativewind';
 import { Magnetometer } from 'expo-sensors';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
 const RadarScreen = () => {
+
+  const { constructId, siteName } = useLocalSearchParams();
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [bearing, setBearing] = useState(0);
   const [distance, setDistance] = useState(0);
   const [heading, setHeading] = useState(0); // Phone's orientation
+
+
+  const siteNameString = Array.isArray(siteName) ? siteName[0] : siteName ?? '';
+  const constructIdString = Array.isArray(constructId) ? constructId[0] : constructId ?? '';
 
   // Request location permission
   useEffect(() => {
@@ -122,8 +128,13 @@ const RadarScreen = () => {
           <Text className="text-white text-lg font-bold">Construct Radar</Text>
         </View>
 
+        <View className='justify-center items-center'>
+          
+          <Text className='text-white text-xl font-bold mt-4'>{siteNameString}-{constructId}</Text>
+        </View>
+
         {/* Radar area */}
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center mb-8">
           {hasLocationPermission ? (
             <View className="items-center p-6 rounded-full">
               {/* Radar background with gradient */}

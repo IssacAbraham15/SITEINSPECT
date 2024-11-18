@@ -8,9 +8,9 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#2f80ed"
+      "image": "assets/images/siteinspectlogotransparent.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#800E13"
     },
     "ios": {
       "supportsTablet": true
@@ -49,7 +49,9 @@
           "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-font",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

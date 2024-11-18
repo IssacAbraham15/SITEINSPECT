@@ -6,13 +6,7 @@ import { addInspectionData, getInspectionDataByDate } from '@/lib/appwrite';
 import { Picker } from '@react-native-picker/picker'
 
 const Inspection = () => {
-  const [checklistIndex, setChecklistIndex] = useState(0);
-  const checklistItems = ["Foundation Check", "Pillar Inspection", "Roof Assessment"]; // Sample checklist items
-
-  const { siteName, constructId } = useLocalSearchParams();
-  const siteNameString = Array.isArray(siteName) ? siteName[0] : siteName ?? '';
-  const constructIdString = Array.isArray(constructId) ? constructId[0] : constructId ?? '';
-
+  const { siteName, constructId, photourl } = useLocalSearchParams();
   const [height, setHeight] = useState('');
   const [width, setWidth] = useState('');
   const [progress, setProgress] = useState('0');
@@ -20,6 +14,42 @@ const Inspection = () => {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [photoNotFound, setPhotoNotFound] = useState(false);
+  const [checklistIndex, setChecklistIndex] = useState(0);
+  const checklistItems = ["Foundation Check", "Pillar Inspection", "Roof Assessment"]; // Sample checklist items
+
+  
+  const siteNameString = Array.isArray(siteName) ? siteName[0] : siteName ?? '';
+  const constructIdString = Array.isArray(constructId) ? constructId[0] : constructId ?? '';
+
+  const photourlString = Array.isArray(photourl) ? photourl[0] : photourl ?? '';
+
+    const fetchImageForCurrentDate = async () => {
+    const currentDate = new Date().toISOString().split('T')[0]
+    const currentDatestring = currentDate.toString()// Get current date in YYYY-MM-DD format
+    try {
+      const inspectionData = await getInspectionDataByDate(siteNameString, constructIdString, currentDatestring);
+      if (inspectionData && inspectionData.image) {
+        setImageUri(inspectionData.image);
+        setPhotoNotFound(false);
+      } else {
+        setPhotoNotFound(true);
+      }
+    } catch (error) {
+      console.error("Error fetching inspection data:", error);
+      setPhotoNotFound(true);
+    }
+  };
+
+  useEffect(() => {
+    if (photourlString) {
+      setImageUri(photourlString);
+      console.log(photourlString) // Set the imageUri to the photourl from the camera screen
+    } else {
+      fetchImageForCurrentDate(); // Fallback to fetching the image from the database
+    }
+  }, [photourlString]);
+  
+
 
   const formatDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, '0');
@@ -31,7 +61,7 @@ const Inspection = () => {
 
   const goToReview = (constructId: string, siteName: string) => {
     router.replace({
-        pathname: '/(other)/review',
+        pathname: '/(root)/(other)/review',
         params: { constructId, siteName },
     });
   };
@@ -41,9 +71,9 @@ const Inspection = () => {
   const handleAddInspection = async () => {
     const inspectionData = {
       ID: constructIdString,
-      Height: parseInt(height,10),
-      Width: parseInt(width,10),
-      InspectionDate: new Date().toISOString(), // Current date in ISO 8601 format
+      Height: parseFloat(height),
+      Width: parseFloat(width),
+      inspectionDate: new Date().toISOString(), // Current date in ISO 8601 format
       Notes: notes,
       Image: imageUri || null,
       Progress: parseInt(progress,10),
@@ -64,36 +94,15 @@ const Inspection = () => {
 
   const currentDate = formatDate(new Date());
 
-  const fetchImageForCurrentDate = async () => {
-    const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-    try {
-      const inspectionData = await getInspectionDataByDate(siteNameString, constructIdString, currentDate);
-      if (inspectionData && inspectionData.image) {
-        setImageUri(inspectionData.image);
-        setPhotoNotFound(false);
-      } else {
-        setPhotoNotFound(true);
-      }
-    } catch (error) {
-      console.error("Error fetching inspection data:", error);
-      setPhotoNotFound(true);
-    }
-  };
-
-  useEffect(() => {
-    fetchImageForCurrentDate(); // Fetch the image when the component mounts
-  }, []);
-
   const goBack = () => {
     router.back();
   };
 
-  const goToCamera = () => {
-    router.push('/(root)/(other)/camera');
-  };
-
-  const goToMeasure = () => {
-    router.push('/(root)/(other)/measure');
+  function goToCamera(siteName: string,constructId: string){
+    router.push({
+            pathname: "/(root)/(other)/camera",
+            params: {siteName,constructId},
+        });
   };
 
   const handleNext = () => {
@@ -114,30 +123,31 @@ const Inspection = () => {
           </TouchableOpacity>
           <Text className="text-lg font-bold text-gray-700">{currentDate}</Text>
           <TouchableOpacity>
-            <FontAwesome name="caret-down" size={24} color="#800000" />
+            <FontAwesome name="caret-down" size={24} color="white" />
           </TouchableOpacity>
         </View>
 
         <View className="px-3">
+
+
           {/* Photo Section */}
-          <View className="mt-6 p-4 flex-row justify-between">
+        <View className="mt-6 p-4 flex-row justify-between">
         <View className="w-1/2 items-center justify-center border-2 border-[#800000] p-1 rounded-lg" style={{ width: 150, height: 150 }}>
           <TouchableOpacity 
-            onPress={() => router.push('/(root)/(other)/comparephotos')} 
             className="justify-center items-center w-full h-full"
           >
-            {imageUri ? (
-              <Image 
-                source={{ uri: imageUri }} // Use the image URI from the database
-                className="w-1/2 h-40 rounded-lg border-2 border-[#800000]" 
-                style={{ resizeMode: 'contain' }} 
-              />
-            ) : (
-              <>
-                <FontAwesome name="camera" size={50} color="#800000" />
-                <Text className="text-[#800000] mt-2">Photo Not Taken</Text>
-              </>
-            )}
+             {imageUri ? ( // Check if the image from the database exists
+        <Image
+            source={{ uri: imageUri }}
+            className="w-full h-full rounded-lg border-2 border-[#800000]"
+            style={{ resizeMode: 'cover' }}
+          />
+        ) : ( // Default "Photo Not Taken" UI
+          <>
+            <FontAwesome name="camera" size={50} color="#800000" />
+            <Text className="text-[#800000] mt-2">Photo Not Taken</Text>
+          </>
+        )}
           </TouchableOpacity>
         </View>
         <Image 
@@ -179,7 +189,7 @@ const Inspection = () => {
                     style={{ height: 200, width: 150 }} // Adjust style for size
                   >
                     {[...Array(11)].map((_, i) => (
-                      <Picker.Item key={i} label={`${i * 10}%`} value={i * 10} />
+                      <Picker.Item key={i} label={`${i * 10}%`} value={i * 10} color='black' />
                     ))}
                   </Picker>
                 )}
@@ -237,15 +247,11 @@ const Inspection = () => {
 
           {/* Action Buttons Section */}
           <View className="mt-6 flex-row justify-between px-2">
-            <TouchableOpacity onPress={goToCamera} className="flex-1 bg-white border border-[#800000] p-4 rounded-lg mr-2 items-center">
+            <TouchableOpacity onPress={()=>goToCamera(siteNameString,constructIdString)} className="flex-1 bg-white border border-[#800000] p-4 rounded-lg mr-2 items-center">
               <FontAwesome name="camera" size={24} color="#800000" />
               <Text className="text-[#800000] mt-2">Take Photo</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={goToMeasure} className="flex-1 bg-white border border-[#800000] p-4 rounded-lg ml-2 items-center">
-              <FontAwesome name="adjust" size={24} color="#800000" />
-              <Text className="text-[#800000] mt-2">Measure</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Done Button */}

@@ -30,7 +30,7 @@ const OnGoingSites = () => {
     };
 
     const goToCompletedSites = () => {
-        router.push("/(root)/(tabs)/completedsites");
+        router.push("/completedsites");
     };
 
     const gotoProfile = () => {
@@ -116,7 +116,7 @@ const OnGoingSites = () => {
 
                 {/* Project List */}
                 <FlatList
-                    className="mt-8 px-4"
+                    className="mt-8 px-4 "
                     data={onGoingSitesData}
                     keyExtractor={item => item.$id}
                     renderItem={({ item }) => (
@@ -148,7 +148,7 @@ const OnGoingSites = () => {
                     onRefresh={onRefresh}
                     refreshing={Refreshing} // Pass the refreshing state to FlatList
                 />
-                <View className='p-10'></View>
+                <View className='p-10 bg-gray-100'></View>
             </ScrollView>
         </SafeAreaView>
     );

@@ -14,12 +14,12 @@ const goBack=()=>{
 }
 
 const gotoInspect=()=>{
-    router.push('/(other)/inspection')
+    router.push('/(root)/(other)/inspection')
 }
 
 const goToReview = (constructId: string, siteName: string) => {
     router.push({
-        pathname: '/(other)/review',
+        pathname: '/(root)/(other)/review',
         params: { constructId, siteName },
     });
 };

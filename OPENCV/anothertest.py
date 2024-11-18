@@ -3,8 +3,8 @@ import cv2
 import numpy as np
 
 # Load the input images
-img1 = cv2.imread('IMG_3579.JPG')
-img2 = cv2.imread('IMG_3580.JPG')
+img1 = cv2.imread('IMG_3574.JPG')
+img2 = cv2.imread('IMG_3573.JPG')
 
 # Resize images to 640x480
 img1 = cv2.resize(img1, (640, 480), interpolation=cv2.INTER_AREA)
